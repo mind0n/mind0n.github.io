@@ -1,0 +1,4 @@
+﻿svg *{
+    user-select:none;
+    cursor:default;
+}

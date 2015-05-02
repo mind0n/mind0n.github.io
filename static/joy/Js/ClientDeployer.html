@@ -1,0 +1,165 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>Deployer</title>
+    <link rel="stylesheet" href="/reset/css" type="text/css" />
+    <link rel="stylesheet" href="/deployer/css" type="text/css" />
+    <style type="text/css">
+        body
+        {
+            background:white;
+        }
+        .page
+        {
+            margin:24px;
+            position:relative;
+            border:solid 1px gray;
+        }
+        .caption
+        {
+            font-weight:bold;
+            font-size:24px;
+            line-height:32px;
+        }
+        .labelarea, .editorarea
+        {
+        }
+        .labelarea
+        {
+            margin-top:1px;
+            font-weight:bold;
+            float:left;
+            clear:both;
+        }
+        .editorarea
+        {
+            border:solid 0px gray;
+            margin-left:120px;            
+        }
+        .editorarea input[type='text']
+        {
+            width:100%;
+            height:100%;
+            background-color:transparent;
+            border:0px;
+        }
+        .editorarea.multiline
+        {
+            height:72px;
+        }
+        .linearea
+        {
+            margin-bottom:6px;
+            line-height:24px;
+            border-bottom:solid 1px gray;
+        }
+
+        .formarea
+        {
+            padding:4px;
+        }
+        .summaryarea
+        {
+            background:#cee4e8;
+            padding:4px;
+        }
+        .cmdarea
+        {
+            padding:4px;
+        }
+    </style>
+    <script type="text/javascript" src="/common/js/javascript"></script>
+    <script type="text/javascript" src="/joy/js/javascript"></script>
+    <script type="text/javascript" src="/jquery/js/javascript"></script>
+    <script type="text/javascript" src="/joy.dom/js/javascript"></script>
+    <script type="text/javascript" src="/form/js/javascript"></script>
+    <script type="text/javascript">
+        var frm = null;
+        var cmd = "msiexec";
+        var par = " /i {0} INSTALLDIR={1} LAUNCHCONFIGTOOL=FALSE IsWithMapping=FALSE WITHMAPPING_NOTINSTALLED=11 /qr";
+        var ds = {
+            Build_Drop: '\\\\192.168.17.8\\DailyMainBuild\\'
+            , Msi_Path: '3.4*'
+            , Install_Dir: 'c:\\servers\\'
+            , Branch: 'p1-main'
+            , Client_Type: 'CadClient'
+            , Uninstall_Dir: 'c:\\servers\\uninstall\\'
+            , Apply_Patch: false
+            , Base_Path: ''
+        };
+
+        function preview() {
+            var el = frm; //$('#formarea').get(0);
+            el.update();
+            var buildmsi = external.GetMsi(ds.Client_Type, ds.Build_Drop, ds.Msi_Path);
+            var unmsi = ds.Uninstall_Dir + ds.Client_Type + '.msi';
+            var targetdir = ds.Install_Dir + ds.Branch + 'server\\' + ds.Client_Type + '\\';
+            var cmd = 'msiexec ';
+            $('#pkmsi').get(0).innerHTML = buildmsi;
+            $('#msi').get(0).innerHTML = cmd + par.format(unmsi, targetdir);
+            $('#unmsi').get(0).innerHTML = cmd + ' /x ' + unmsi;
+            $('#locmsi').get(0).innerHTML = unmsi;
+            ds.unarg = ' /x ' + unmsi;
+            ds.pkarg = par.format(unmsi, targetdir);
+            ds.targetdir = targetdir;
+        }
+        function copied() {
+        }
+        $(function () {
+            $('#bpreview').click(function () {
+                preview();
+            });
+            $('#bdeploy').click(function () {
+                preview();
+                $('#formarea').prop('disabled', true);
+                window.setTimeout(function () {
+                    external.Start('msiexec', ds.unarg);
+                    external.CopyMsi($('#pkmsi').text(), $('#locmsi').text());
+                    external.Start('msiexec', ds.pkarg);
+                    external.Start('executor.exe', ' /s ', ds.targetdir + 'tools\\');
+                    $('#formarea').prop('disabled', false);
+                }, 500);
+                //external.CopyMsi($('#pkmsi').text(), $('#locmsi').text());
+            });
+            frm = joy.jbuilder({ tag: 'FormFactory' });
+            frm.build(ds, { area: 'formarea', editors: { Apply_Patch: 'FormRowCheckbox' } });
+            $('#formarea').append(frm);
+            //var frm = joy.Form.build(ds, { area: 'formarea', editors: { Apply_Patch: 'FormRowCheckbox' } });
+
+        });
+    </script>
+</head>
+<body>
+    <div class="page">
+        <div class="caption">
+            Client Deployer
+        </div>
+        <div id="formarea" class="formarea">
+        </div>
+        <div class="ml_l1 cmdarea">
+            <input type="button" id="bpreview" value="Preview" />
+            <input type="button" id="bdeploy" value="Deploy" />
+        </div>
+        <div class="summaryarea">
+            <div class="linearea">
+                <div class="labelarea">Uninstall Msi</div>
+                <div id="unmsi" class="editorarea multiline"></div>
+            </div>
+            <div class="linearea">
+                <div class="labelarea">Msi Command</div>
+                <div id="msi" class="editorarea multiline"></div>
+            </div>
+            <div class="linearea">
+                <div class="labelarea">Package Msi</div>
+                <div id="pkmsi" class="editorarea">&nbsp;</div>
+            </div>
+            <div class="linearea">
+                <div class="labelarea">Local Msi</div>
+                <div id="locmsi" class="editorarea">&nbsp;</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
