@@ -1,1 +1,23 @@
-<html><body>ok</body></html>
+<!DOCTYPE html>
+
+<html ng-app="ag">
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+    <script src="/js/jquery.js"></script>
+    <script src="/js/angular.js"></script>
+    <script>
+        var app = angular.module('ag', []);
+        app.controller('bd', function ($scope, $http) {
+            $http({ method: 'get', url: '/home/index' }).success(function (data) {
+                $scope.data = 'success';
+            });
+        });
+    </script>
+</head>
+<body ng-controller="bd">
+    <div ng-bind="data">
+
+    </div>
+</body>
+</html>
