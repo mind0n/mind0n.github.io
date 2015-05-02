@@ -9,7 +9,7 @@
     <script>
         var app = angular.module('ag', []);
         app.controller('bd', function ($scope, $http) {
-            $http({ method: 'get', url: '/home/index' }).success(function (data) {
+            $http({ method: 'get', url: '/' }).success(function (data) {
                 $scope.data = 'success';
             });
         });
